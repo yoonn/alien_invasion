@@ -8,8 +8,12 @@ class GameStats():
         
         # 외계인 침공 게임을 비활성 상태로 시작합니다.
         self.game_active = False
+
+        # 최고 점수는 리셋하지 말아야 합니다.
+        self.high_score = 0
         
     def reset_stats(self):
         """게임 도중에 바뀔 수 있는 기록을 초기화합니다."""
         self.ships_left = self.ai_settings.ship_limit
         self.score = 0
+        self.level = 1
