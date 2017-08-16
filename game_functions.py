@@ -104,7 +104,7 @@ def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_bu
     pygame.display.flip()
 
 
-def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets, items):
     """Update position of bullets, and get rid of old bullets."""
     # Update bullet positions.
     bullets.update()
@@ -113,13 +113,26 @@ def update_bullets(ai_settings, screen, stats, sb, ship, aliens, bullets):
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
-            
-    check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets)
+
+    check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets, items)
 
 
-def check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets):
+def check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, bullets, items):
     """Respond to bullet-alien collisions."""
     # Remove any bullets and aliens that have collided.
+
+    if items:
+        # item 가져오기
+        item = items[0]
+
+        # item flag 가 true 이면 사라지지 않는 초강력 탄환
+        # if item.flag:
+            # collisions = pygame.sprite.groupcollide(bullets, aliens, False, True)
+        # else:
+            # collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+
+        print(item.flag)
+
     collisions = pygame.sprite.groupcollide(bullets, aliens, False, True)
 
     if collisions:
@@ -138,6 +151,7 @@ def check_bullet_alien_collisions(ai_settings, screen, stats, sb, ship, aliens, 
         sb.prep_level()
 
         create_fleet(ai_settings, screen, ship, aliens)
+        create_item(ai_settings, screen, items)
 
 
 def check_fleet_edges(ai_settings, aliens):
@@ -205,15 +219,35 @@ def update_aliens(ai_settings, screen, stats, sb, ship, aliens, bullets):
     check_aliens_bottom(ai_settings, stats, screen, sb, ship, aliens, bullets)
 
 
+def update_items(ai_settings, screen, ship, items):
+    """아이템 위치 업데이트"""
+    screen_rect = screen.get_rect()
+    if items:
+        item = items[0]
+        item_rect = item.get_rect()
+
+        # 아이템이 바닥에 도달하면 아이템을 지운다.
+        if screen_rect.bottom <= item_rect.bottom:
+            items.empty()
+
+        # 아이템이 함선과 만나는지 체크
+        collisions = pygame.sprite.groupcollide(item, ship, True, False)
+
+        if collisions:
+            item.flag = True
+        else:
+            item.flag = False
+
+
 def get_number_aliens_x(ai_settings, alien_width):
-    """Determine the number of aliens that fit in a row."""
+    """한 줄에 들어갈 외계인 숫자를 계산합니다."""
     available_space_x = ai_settings.screen_width - 2 * alien_width
     number_aliens_x = int(available_space_x / (2 * alien_width))
     return number_aliens_x
 
 
 def get_number_rows(ai_settings, ship_height, alien_height):
-    """한 줄에 들어갈 외계인 숫자를 계산합니다."""
+    """화면에 외계인이 몇 줄이 들어갈 수 있는지 계산합니다."""
     available_space_y = (ai_settings.screen_height -
                             (3 * alien_height) - ship_height)
     number_rows = int(available_space_y / (2 * alien_height))
@@ -221,6 +255,7 @@ def get_number_rows(ai_settings, ship_height, alien_height):
 
 
 def create_item(ai_settings, screen, items):
+    """아이템을 만들고 랜덤으로 떨어트린다."""
     item = Item(ai_settings, screen)
     random_number = randint(0, 8)
 
@@ -230,42 +265,43 @@ def create_item(ai_settings, screen, items):
     items.add(item)
 
 
-# def create_alien(ai_settings, screen, aliens, alien_number, row_number):
-    # """외계인을 만들고 줄 안에 넣습니다."""
-    # alien = Alien(ai_settings, screen)
-    # alien_width = alien.rect.width
-    # alien.x = alien_width + 2 * alien_width * alien_number
-    # alien.rect.x = alien.x
-    # alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
-    # aliens.add(alien)
-
-
-def create_alien(ai_settings, screen, aliens):
+def create_alien(ai_settings, screen, aliens, alien_number, row_number):
+    """외계인을 만들고 줄 안에 넣습니다."""
     alien = Alien(ai_settings, screen)
     alien_width = alien.rect.width
-    random_number = randint(0, 8)
-
-    alien.x = alien_width + 2 * alien_width * random_number
+    alien.x = alien_width + 2 * alien_width * alien_number
     alien.rect.x = alien.x
-    alien.rect.y = alien.rect.height * 2
+    alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
     aliens.add(alien)
+
+
+# def create_alien(ai_settings, screen, aliens):
+    # 외계인을 랜덤으로 떨어트리는 것
+    # alien = Alien(ai_settings, screen)
+    # alien_width = alien.rect.width
+    # random_number = randint(0, 8)
+
+    # alien.x = alien_width + 2 * alien_width * random_number
+    # alien.rect.x = alien.x
+    # alien.rect.y = alien.rect.height * 2
+    # aliens.add(alien)
 
 
 def create_fleet(ai_settings, screen, ship, aliens):
     """외계인 함대 전체를 만듭니다."""
     # 외계인을 하나 만들고 한 줄에 표시할 외계인 숫자를 결정합니다.
-    # alien = Alien(ai_settings, screen)
-    # number_aliens_x = get_number_aliens_x(ai_settings, alien.rect.width)
-    # number_rows = get_number_rows(ai_settings, ship.rect.height,
-    #     alien.rect.height)
+    alien = Alien(ai_settings, screen)
+    number_aliens_x = get_number_aliens_x(ai_settings, alien.rect.width)
+    number_rows = get_number_rows(ai_settings, ship.rect.height,
+        alien.rect.height)
     
     # 외계인 한 줄을 만듭니다.
-    # for row_number in range(number_rows):
-    #     for alien_number in range(number_aliens_x):
-    #         create_alien(ai_settings, screen, aliens, alien_number,
-    #             row_number)
-    alien = Alien(ai_settings, screen)
-    create_alien(ai_settings, screen, aliens)
+    for row_number in range(number_rows):
+        for alien_number in range(number_aliens_x):
+            create_alien(ai_settings, screen, aliens, alien_number,
+                row_number)
+    # alien = Alien(ai_settings, screen)
+    # create_alien(ai_settings, screen, aliens)
 
 def check_high_score(stats, sb):
     """최고 점수보다 높은지 확인합니다."""

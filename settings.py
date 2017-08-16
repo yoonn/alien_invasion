@@ -12,7 +12,7 @@ class Settings():
         self.ship_limit = 3
 
         # Bullet settings.
-        self.bullet_width = 300
+        self.bullet_width = 1100
         self.bullet_height = 15
         self.bullet_color = 60, 60, 60
         self.bullets_allowed = 3
@@ -38,7 +38,7 @@ class Settings():
         self.ship_speed_factor = 1.5
         self.bullet_speed_factor = 3
         self.alien_speed_factor = 1
-        self.item_speed_factor = 1
+        self.item_speed_factor = 3
 
         # fleet_direction 이 1이면 오른쪽, -1이면 왼쪽입니다.
         self.fleet_direction = 1
